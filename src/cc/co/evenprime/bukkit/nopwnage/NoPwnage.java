@@ -37,13 +37,13 @@ public class NoPwnage extends JavaPlugin {
             data.setLocation(l);
         }
 
-        System.out.println("[NoPwnage] version ["+this.getDescription().getVersion() + "] has been enabled!");
+        System.out.println("[NoPwnage] version [" + this.getDescription().getVersion() + "] has been enabled!");
     }
 
     public void onDisable() {
         this.playerData = null;
 
-        System.out.println("NoPwnage version ["+this.getDescription().getVersion() + "] has been disabled!");
+        System.out.println("NoPwnage version [" + this.getDescription().getVersion() + "] has been disabled!");
     }
 
     public void log(String message) {

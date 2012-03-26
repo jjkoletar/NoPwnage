@@ -177,6 +177,26 @@
     
     Commands have to be seperated by ";" and the "[player]" and "[ip]"
     wildcards will be replaced by the actual data during execution.
+    
+  captcha.enabled:
+    Should players that get to "banlevel" be presented with a captcha first
+    instead of running the commands immediatly?
+
+  captcha.question:
+    How should the question be worded. Use & to create colors. The text
+    [captcha] will be replaced with the actual captcha.
+ 
+  tries:
+    How many attempts will a player have to give the correct answer. A failed
+    attempt will display the question again. Be generous here, as players may
+    not be fast enough to read the question the first few times or be otherwise
+    distracted.
+
+  length:
+    How many characters should the captcha have.
+
+  characters:
+    The characters for the captcha are randomly drawn from this string
 
 
 ################################################################################

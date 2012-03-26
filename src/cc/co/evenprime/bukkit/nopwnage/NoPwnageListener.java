@@ -1,5 +1,6 @@
 package cc.co.evenprime.bukkit.nopwnage;
 
+import java.util.Random;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -20,6 +21,8 @@ public class NoPwnageListener implements Listener {
     private String lastGlobalMessage;
     private long lastGlobalMessageTime;
     private int globalRepeated;
+
+    private final Random random = new Random();
 
     public NoPwnageListener(NoPwnage instance) {
         this.plugin = instance;
@@ -43,6 +46,32 @@ public class NoPwnageListener implements Listener {
             return;
 
         PlayerData data = plugin.getData(player);
+
+        // Player is supposed to fill out a captcha
+        if(config.captcha && data.captchaDone) {
+            return;
+        }
+
+        if(config.captcha && data.captchaStarted) {
+            // Correct answer?
+            if(event.getMessage().equals(data.captchaAnswer)) {
+                data.captchaDone = true;
+            } else {
+                player.sendMessage(data.captchaQuestion);
+
+                if(data.captchaTries > config.tries) {
+                    if(player.isOnline()) {
+                        runCommands(player, "Failed captcha");
+                        plugin.log(player.getName() + " from " + player.getAddress().toString().substring(1) + " failed the captcha.");
+                    }
+                }
+
+                data.captchaTries++;
+            }
+            event.setCancelled(true);
+            return;
+        }
+
         long now = System.currentTimeMillis();
         Location location = player.getLocation();
 
@@ -116,21 +145,29 @@ public class NoPwnageListener implements Listener {
         }
 
         //plugin.log("Suspicion: " + reasons + ": " + suspicion);
-
-        if(suspicion >= config.warnLevel && config.warnPlayers && !warned) {
+        if(config.warnPlayers && suspicion >= config.warnLevel && !warned) {
             data.lastWarningTime = now;
             warnPlayer(player);
         } else if(suspicion >= config.banLevel) {
-            lastBanCausingMessage = message;
-            lastBanCausingMessageTime = now;
-            data.lastWarningTime = now;
-            if(config.warnOthers) {
-                warnOthers(player);
+            if(config.captcha && !data.captchaStarted) {
+                data.captchaStarted = true;
+                String captcha = generateCaptcha();
+                data.captchaAnswer = captcha;
+                data.captchaQuestion = config.question.replace("[captcha]", captcha);
+                event.setCancelled(true);
+                event.getPlayer().sendMessage(data.captchaQuestion);
+            } else {
+                lastBanCausingMessage = message;
+                lastBanCausingMessageTime = now;
+                data.lastWarningTime = now;
+                if(config.warnOthers) {
+                    warnOthers(player);
+                }
+                runCommands(player, "Spambotlike behaviour");
+                plugin.log(player.getName() + " banned for " + reasons + ": " + suspicion);
+                event.setCancelled(true);
+                return;
             }
-            runCommands(player, "Spambotlike behaviour");
-            plugin.log(player.getName() + " banned for " + reasons + ": " + suspicion);
-            event.setCancelled(true);
-            return;
         }
 
         data.lastMessage = message;
@@ -138,6 +175,18 @@ public class NoPwnageListener implements Listener {
 
         lastGlobalMessage = message;
         lastGlobalMessageTime = now;
+    }
+
+    private String generateCaptcha() {
+        NoPwnageConfiguration config = plugin.getNPconfig();
+
+        StringBuilder b = new StringBuilder();
+
+        for(int i = 0; i < config.length; i++) {
+            b.append(config.characters.charAt(random.nextInt(config.characters.length())));
+        }
+
+        return b.toString();
     }
 
     @EventHandler
@@ -210,11 +259,13 @@ public class NoPwnageListener implements Listener {
         String name = player.getName();
         String ip = player.getAddress().toString().substring(1).split(":")[0];
 
-        for(String command : config.commands) {
-            try {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("[player]", name).replace("[ip]", ip).replace("[reason]", reason));
-            } catch(Exception e) {
+        if(player.isOnline()) {
+            for(String command : config.commands) {
+                try {
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("[player]", name).replace("[ip]", ip).replace("[reason]", reason));
+                } catch(Exception e) {
 
+                }
             }
         }
     }

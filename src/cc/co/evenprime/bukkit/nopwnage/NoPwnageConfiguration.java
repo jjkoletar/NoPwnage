@@ -3,6 +3,7 @@ package cc.co.evenprime.bukkit.nopwnage;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStream;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
 
@@ -37,6 +38,11 @@ public class NoPwnageConfiguration {
     private static final String RELOG_WARNINGS = "relog.warnings";
     private static final String RELOG_TIMEOUT = "relog.timeout";
     private static final String COMMANDS = "commands";
+    private static final String CAPTCHA_ENABLED = "captcha.enabled";
+    private static final String CAPTCHA_QUESTION = "captcha.question";
+    private static final String CAPTCHA_TRIES = "captcha.tries";
+    private static final String CAPTCHA_LENGTH = "captcha.length";
+    private static final String CAPTCHA_CHARACTERS = "captcha.characters";
 
     public final boolean warnPlayers;
     public final boolean warnOthers;
@@ -74,6 +80,12 @@ public class NoPwnageConfiguration {
     public final int relogWarnings;
     public final long relogTimeout;
 
+    public final boolean captcha;
+    public final String question;
+    public final int length;
+    public final String characters;
+    public final int tries;
+
     public final String[] commands;
 
     public NoPwnageConfiguration(Plugin plugin) {
@@ -81,8 +93,8 @@ public class NoPwnageConfiguration {
         plugin.reloadConfig();
         FileConfiguration config = plugin.getConfig();
         config.options().header("Set the options for the NoPwnage plugin");
-        config.addDefault(WARNPLAYERS, true);
-        config.addDefault(WARNOTHERS, true);
+        config.addDefault(WARNPLAYERS, false);
+        config.addDefault(WARNOTHERS, false);
         this.warnPlayers = config.getBoolean(WARNPLAYERS);
         this.warnOthers = config.getBoolean(WARNOTHERS);
 
@@ -153,11 +165,22 @@ public class NoPwnageConfiguration {
             this.commands[i] = this.commands[i].trim();
         }
 
+        config.addDefault(CAPTCHA_ENABLED, true);
+        config.addDefault(CAPTCHA_QUESTION, (ChatColor.RED + "Please type '" + ChatColor.GOLD + "[captcha]" + ChatColor.RED + "' to continue sending messages/commands").replace(ChatColor.COLOR_CHAR, '&'));
+        config.addDefault(CAPTCHA_TRIES, 20);
+        config.addDefault(CAPTCHA_LENGTH, 4);
+        config.addDefault(CAPTCHA_CHARACTERS, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
+        this.captcha = config.getBoolean(CAPTCHA_ENABLED);
+        this.question = config.getString(CAPTCHA_QUESTION).replace('&', ChatColor.COLOR_CHAR);
+        this.tries = config.getInt(CAPTCHA_TRIES);
+        this.length = config.getInt(CAPTCHA_LENGTH);
+        this.characters = config.getString(CAPTCHA_CHARACTERS);
+
         config.options().copyDefaults(true);
         plugin.saveConfig();
 
     }
-    
+
     public static void writeInstructions(File rootConfigFolder) {
         InputStream fis = NoPwnageConfiguration.class.getClassLoader().getResourceAsStream("Instructions.txt");
 

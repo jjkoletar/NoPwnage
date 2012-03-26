@@ -15,6 +15,11 @@ public class PlayerData {
     public long lastMovedTime;
     public int relogWarnings;
     public int speedRepeated;
+    public String captchaAnswer = "";
+    public String captchaQuestion = "";
+    public boolean captchaDone = false;
+    public boolean captchaStarted = false;
+    public int captchaTries;
 
     private static class Loc {
 
